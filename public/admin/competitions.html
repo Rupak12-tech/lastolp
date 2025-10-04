@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Competitions - BD Olympiad Admin</title>
+    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="/js/supabase-config.js"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-gray-800">BD Olympiad Admin</div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex space-x-6">
+                    <a href="/admin/" class="text-gray-800 hover:text-blue-500">Dashboard</a>
+                    <a href="/admin/competitions.html" class="text-blue-500 font-bold hover:text-blue-700">Competitions</a>
+                    <a href="/admin/users.html" class="text-gray-800 hover:text-blue-500">Users</a>
+                    <button id="logout-button" class="text-red-600 hover:text-red-800">Logout</button>
+                </div>
+            </div>
+
+            <!-- Mobile navigation -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="/admin/" class="text-gray-800 hover:text-blue-500">Dashboard</a>
+                    <a href="/admin/competitions.html" class="text-blue-500 font-bold hover:text-blue-700">Competitions</a>
+                    <a href="/admin/users.html" class="text-gray-800 hover:text-blue-500">Users</a>
+                    <button id="mobile-logout-button" class="text-red-600 hover:text-red-800 text-left">Logout</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800">Manage Competitions</h1>
+            <div class="flex space-x-2">
+                <div class="relative" id="bulk-actions-container">
+                    <button id="bulk-actions-btn" class="bg-purple-500 hover:bg-purple-600 text-white font-bold py-2 px-4 rounded flex items-center">
+                        Bulk Actions
+                        <svg class="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                        </svg>
+                    </button>
+                    <div id="bulk-actions-dropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg hidden z-10">
+                        <div class="py-1">
+                            <button id="bulk-activate-btn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Activate Selected</button>
+                            <button id="bulk-deactivate-btn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Deactivate Selected</button>
+                            <button id="bulk-feature-btn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Feature Selected</button>
+                            <button id="bulk-unfeature-btn" class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Unfeature Selected</button>
+                            <button id="bulk-delete-btn" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">Delete Selected</button>
+                        </div>
+                    </div>
+                </div>
+                <button id="create-competition-btn" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded">
+                    Create New Competition
+                </button>
+            </div>
+        </div>
+
+        <!-- Competition Form Modal -->
+        <div id="competition-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+                <div class="px-6 py-4 border-b">
+                    <div class="flex justify-between items-center">
+                        <h3 id="modal-title" class="text-xl font-bold text-gray-800">Create New Competition</h3>
+                        <button id="close-modal-btn" class="text-gray-600 hover:text-gray-800">
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <form id="competition-form" class="px-6 py-4">
+                    <input type="hidden" id="competition-id">
+                    <div class="mb-4">
+                        <label for="title" class="block text-gray-700 font-bold mb-2">Title</label>
+                        <input type="text" id="title" name="title" class="w-full px-3 py-2 border rounded-lg" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="description" class="block text-gray-700 font-bold mb-2">Description</label>
+                        <textarea id="description" name="description" rows="3" class="w-full px-3 py-2 border rounded-lg"></textarea>
+                    </div>
+                    <div class="mb-4">
+                        <label for="subject" class="block text-gray-700 font-bold mb-2">Subject</label>
+                        <input type="text" id="subject" name="subject" class="w-full px-3 py-2 border rounded-lg" required>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="start-date" class="block text-gray-700 font-bold mb-2">Start Date</label>
+                            <input type="datetime-local" id="start-date" name="start_date" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="end-date" class="block text-gray-700 font-bold mb-2">End Date</label>
+                            <input type="datetime-local" id="end-date" name="end_date" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label for="duration" class="block text-gray-700 font-bold mb-2">Duration (minutes)</label>
+                            <input type="number" id="duration" name="duration_minutes" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                        <div>
+                            <label for="max-score" class="block text-gray-700 font-bold mb-2">Max Score</label>
+                            <input type="number" id="max-score" name="max_score" class="w-full px-3 py-2 border rounded-lg" required>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-bold mb-2">Status</label>
+                        <div class="flex flex-col space-y-2">
+                            <div class="flex items-center">
+                                <input type="radio" id="status-upcoming" name="status" value="upcoming" class="mr-2" checked>
+                                <label for="status-upcoming">Upcoming</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="radio" id="status-active" name="status" value="active" class="mr-2">
+                                <label for="status-active">Active</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="radio" id="status-completed" name="status" value="completed" class="mr-2">
+                                <label for="status-completed">Completed</label>
+                            </div>
+                            <div class="flex items-center">
+                                <input type="radio" id="status-archived" name="status" value="archived" class="mr-2">
+                                <label for="status-archived">Archived</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-4">
+                        <label class="block text-gray-700 font-bold mb-2">Featured Competition</label>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="is-featured" name="is_featured" class="mr-2">
+                            <label for="is-featured">Show on homepage</label>
+                        </div>
+                    </div>
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" id="save-competition-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded">
+                            Save Competition
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div id="delete-modal" class="fixed inset-0 bg-gray-900 bg-opacity-50 hidden flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+                <div class="px-6 py-4 border-b">
+                    <h3 class="text-xl font-bold text-gray-800">Confirm Deletion</h3>
+                </div>
+                <div class="px-6 py-4">
+                    <p>Are you sure you want to delete this competition? This action cannot be undone.</p>
+                </div>
+                <div class="px-6 py-4 bg-gray-100 flex justify-end">
+                    <button id="cancel-delete-btn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded mr-2">
+                        Cancel
+                    </button>
+                    <button id="confirm-delete-btn" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Competitions List -->
+        <div class="bg-white rounded-lg shadow-md overflow-hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <input type="checkbox" id="select-all-competitions" class="rounded text-blue-600">
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Subject</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Featured</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="competitions-table-body" class="bg-white divide-y divide-gray-200">
+                    <!-- Competition rows will be inserted here -->
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-500" colspan="5">
+                            Loading competitions...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <script>
+        // Check if user is logged in and is admin
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Get current user
+            const { data: { user } } = await supabaseClient.auth.getUser();
+            
+            if (!user) {
+                // Redirect to login if not logged in
+                window.location.href = '/login.html';
+                return;
+            }
+            
+            // Check if user is admin
+            const { data: profile, error } = await supabaseClient
+                .from('profiles')
+                .select('is_admin')
+                .eq('id', user.id)
+                .single();
+                
+            if (error || !profile || !profile.is_admin) {
+                // Redirect to home if not admin
+                window.location.href = '/';
+                return;
+            }
+            
+            // Load competitions
+            loadCompetitions();
+            
+            // Set up event listeners
+            setupEventListeners();
+            
+            // Bulk actions dropdown toggle
+            document.getElementById('bulk-actions-btn').addEventListener('click', function() {
+                document.getElementById('bulk-actions-dropdown').classList.toggle('hidden');
+            });
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function(event) {
+                const container = document.getElementById('bulk-actions-container');
+                if (!container.contains(event.target)) {
+                    document.getElementById('bulk-actions-dropdown').classList.add('hidden');
+                }
+            });
+            
+            // Select all competitions
+            document.getElementById('select-all-competitions').addEventListener('change', function() {
+                const checkboxes = document.querySelectorAll('.competition-checkbox');
+                checkboxes.forEach(checkbox => {
+                    checkbox.checked = this.checked;
+                });
+            });
+            
+            // Bulk action buttons
+            document.getElementById('bulk-activate-btn').addEventListener('click', function() {
+                bulkUpdateStatus('active');
+            });
+            
+            document.getElementById('bulk-deactivate-btn').addEventListener('click', function() {
+                bulkUpdateStatus('upcoming');
+            });
+            
+            document.getElementById('bulk-feature-btn').addEventListener('click', function() {
+                bulkUpdateFeatured(true);
+            });
+            
+            document.getElementById('bulk-unfeature-btn').addEventListener('click', function() {
+                bulkUpdateFeatured(false);
+            });
+            
+            document.getElementById('bulk-delete-btn').addEventListener('click', function() {
+                bulkDelete();
+            });
+        });
+        
+        // Load competitions from Supabase
+        async function loadCompetitions() {
+            const { data: competitions, error } = await supabaseClient
+                .from('competitions')
+                .select('*')
+                .order('created_at', { ascending: false });
+                
+            const tableBody = document.getElementById('competitions-table-body');
+            
+            if (error) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-red-500" colspan="5">
+                            Error loading competitions: ${error.message}
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            if (competitions.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td class="px-6 py-4 whitespace-nowrap text-center text-gray-500" colspan="5">
+                            No competitions found. Create your first competition!
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tableBody.innerHTML = competitions.map(comp => {
+                // Determine status class and text
+                let statusClass, statusText;
+                
+                if (comp.status === 'active') {
+                    statusClass = 'bg-green-100 text-green-800';
+                    statusText = 'Active';
+                } else if (comp.status === 'upcoming') {
+                    statusClass = 'bg-blue-100 text-blue-800';
+                    statusText = 'Upcoming';
+                } else if (comp.status === 'completed') {
+                    statusClass = 'bg-purple-100 text-purple-800';
+                    statusText = 'Completed';
+                } else if (comp.status === 'archived') {
+                    statusClass = 'bg-gray-100 text-gray-800';
+                    statusText = 'Archived';
+                } else {
+                    // Fallback for old data format
+                    statusClass = comp.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800';
+                    statusText = comp.is_active ? 'Active' : 'Inactive';
+                }
+                
+                // Format date range
+                const startDate = new Date(comp.start_date).toLocaleDateString();
+                const endDate = comp.end_date ? new Date(comp.end_date).toLocaleDateString() : 'N/A';
+                
+                return `
+                <tr data-id="${comp.id}">
+                    <td class="px-4 py-4 whitespace-nowrap">
+                        <input type="checkbox" class="competition-checkbox rounded text-blue-600" data-id="${comp.id}">
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm font-medium text-gray-900">${comp.title}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">${comp.subject}</div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">
+                            ${startDate} - ${endDate}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${statusClass}">
+                            ${statusText}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="text-sm text-gray-500">
+                            ${comp.participant_count || 0}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${comp.is_featured ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}">
+                            ${comp.is_featured ? 'Featured' : 'Standard'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button class="text-blue-600 hover:text-blue-900 mr-3 edit-btn" data-id="${comp.id}">Edit</button>
+                        <button class="text-red-600 hover:text-red-900 delete-btn" data-id="${comp.id}">Delete</button>
+                    </td>
+                </tr>
+            `;
+            }).join('');
+            
+            // Add event listeners to edit and delete buttons
+            document.querySelectorAll('.edit-btn').forEach(btn => {
+                btn.addEventListener('click', () => editCompetition(btn.dataset.id));
+            });
+            
+            document.querySelectorAll('.delete-btn').forEach(btn => {
+                btn.addEventListener('click', () => showDeleteModal(btn.dataset.id));
+            });
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Mobile menu toggle
+            document.getElementById('mobile-menu-button').addEventListener('click', function() {
+                document.getElementById('mobile-menu').classList.toggle('hidden');
+            });
+            
+            // Logout buttons
+            document.getElementById('logout-button').addEventListener('click', logout);
+            document.getElementById('mobile-logout-button').addEventListener('click', logout);
+            
+            // Create competition button
+            document.getElementById('create-competition-btn').addEventListener('click', showCreateModal);
+            
+            // Close modal button
+            document.getElementById('close-modal-btn').addEventListener('click', closeModal);
+            
+            // Competition form submission
+            document.getElementById('competition-form').addEventListener('submit', saveCompetition);
+            
+            // Delete modal buttons
+            document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteModal);
+            document.getElementById('confirm-delete-btn').addEventListener('click', deleteCompetition);
+        }
+        
+        // Show create competition modal
+        function showCreateModal() {
+            document.getElementById('modal-title').textContent = 'Create New Competition';
+            document.getElementById('competition-form').reset();
+            document.getElementById('competition-id').value = '';
+            document.getElementById('is-active').checked = true;
+            document.getElementById('competition-modal').classList.remove('hidden');
+        }
+        
+        // Show edit competition modal
+        async function editCompetition(id) {
+            const { data: competition, error } = await supabaseClient
+                .from('competitions')
+                .select('*')
+                .eq('id', id)
+                .single();
+                
+            if (error) {
+                alert('Error loading competition: ' + error.message);
+                return;
+            }
+            
+            document.getElementById('modal-title').textContent = 'Edit Competition';
+            document.getElementById('competition-id').value = competition.id;
+            document.getElementById('title').value = competition.title;
+            document.getElementById('description').value = competition.description || '';
+            document.getElementById('subject').value = competition.subject;
+            
+            // Format dates for datetime-local input
+            if (competition.start_date) {
+                document.getElementById('start-date').value = new Date(competition.start_date).toISOString().slice(0, 16);
+            }
+            if (competition.end_date) {
+                document.getElementById('end-date').value = new Date(competition.end_date).toISOString().slice(0, 16);
+            }
+            
+            document.getElementById('duration').value = competition.duration_minutes;
+            document.getElementById('max-score').value = competition.max_score;
+            
+            // Set status radio buttons
+            if (competition.status) {
+                document.querySelector(`input[name="status"][value="${competition.status}"]`).checked = true;
+            } else {
+                // Legacy support
+                document.querySelector(`input[name="status"][value="${competition.is_active ? 'active' : 'upcoming'}"]`).checked = true;
+            }
+            
+            // Set featured checkbox
+            document.getElementById('is-featured').checked = competition.is_featured || false;
+            
+            document.getElementById('competition-modal').classList.remove('hidden');
+        }
+        
+        // Close competition modal
+        function closeModal() {
+            document.getElementById('competition-modal').classList.add('hidden');
+        }
+        
+        // Save competition (create or update)
+        async function saveCompetition(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('competition-id').value;
+            const isUpdate = id !== '';
+            
+            const competitionData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                subject: document.getElementById('subject').value,
+                start_date: document.getElementById('start-date').value,
+                end_date: document.getElementById('end-date').value,
+                duration_minutes: parseInt(document.getElementById('duration').value),
+                max_score: parseInt(document.getElementById('max-score').value),
+                status: document.querySelector('input[name="status"]:checked').value,
+                is_featured: document.getElementById('is-featured').checked,
+                is_active: document.querySelector('input[name="status"]:checked').value === 'active' // For backward compatibility
+            };
+            
+            let result;
+            
+            if (isUpdate) {
+                // Update existing competition
+                result = await supabaseClient
+                    .from('competitions')
+                    .update(competitionData)
+                    .eq('id', id);
+            } else {
+                // Create new competition
+                const { data: { user } } = await supabaseClient.auth.getUser();
+                competitionData.created_by = user.id;
+                
+                result = await supabaseClient
+                    .from('competitions')
+                    .insert(competitionData);
+            }
+            
+            if (result.error) {
+                alert(`Error ${isUpdate ? 'updating' : 'creating'} competition: ${result.error.message}`);
+                return;
+            }
+            
+            closeModal();
+            loadCompetitions();
+        }
+        
+        // Show delete confirmation modal
+        function showDeleteModal(id) {
+            document.getElementById('confirm-delete-btn').dataset.id = id;
+            document.getElementById('delete-modal').classList.remove('hidden');
+        }
+        
+        // Close delete confirmation modal
+        function closeDeleteModal() {
+            document.getElementById('delete-modal').classList.add('hidden');
+        }
+        
+        // Delete competition
+        async function deleteCompetition() {
+            const id = document.getElementById('confirm-delete-btn').dataset.id;
+            
+            const { error } = await supabaseClient
+                .from('competitions')
+                .delete()
+                .eq('id', id);
+                
+            if (error) {
+                alert('Error deleting competition: ' + error.message);
+                return;
+            }
+            
+            closeDeleteModal();
+            loadCompetitions();
+        }
+        
+        // Logout function
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = '/login.html';
+        }
+        
+        // Get selected competition IDs
+        function getSelectedCompetitionIds() {
+            const checkboxes = document.querySelectorAll('.competition-checkbox:checked');
+            return Array.from(checkboxes).map(checkbox => checkbox.getAttribute('data-id'));
+        }
+        
+        // Bulk update status
+        async function bulkUpdateStatus(status) {
+            const ids = getSelectedCompetitionIds();
+            if (ids.length === 0) {
+                alert('Please select at least one competition');
+                return;
+            }
+            
+            try {
+                for (const id of ids) {
+                    await supabaseClient
+                        .from('competitions')
+                        .update({ 
+                            status: status,
+                            is_active: status === 'active' // For backward compatibility
+                        })
+                        .eq('id', id);
+                }
+                
+                alert(`Successfully updated ${ids.length} competition(s) to ${status} status`);
+                loadCompetitions();
+            } catch (error) {
+                console.error('Error updating competitions:', error);
+                alert('Error updating competitions: ' + error.message);
+            }
+        }
+        
+        // Bulk update featured status
+        async function bulkUpdateFeatured(isFeatured) {
+            const ids = getSelectedCompetitionIds();
+            if (ids.length === 0) {
+                alert('Please select at least one competition');
+                return;
+            }
+            
+            try {
+                for (const id of ids) {
+                    await supabaseClient
+                        .from('competitions')
+                        .update({ is_featured: isFeatured })
+                        .eq('id', id);
+                }
+                
+                alert(`Successfully ${isFeatured ? 'featured' : 'unfeatured'} ${ids.length} competition(s)`);
+                loadCompetitions();
+            } catch (error) {
+                console.error('Error updating competitions:', error);
+                alert('Error updating competitions: ' + error.message);
+            }
+        }
+        
+        // Bulk delete
+        async function bulkDelete() {
+            const ids = getSelectedCompetitionIds();
+            if (ids.length === 0) {
+                alert('Please select at least one competition');
+                return;
+            }
+            
+            if (!confirm(`Are you sure you want to delete ${ids.length} competition(s)? This action cannot be undone.`)) {
+                return;
+            }
+            
+            try {
+                for (const id of ids) {
+                    await supabaseClient
+                        .from('competitions')
+                        .delete()
+                        .eq('id', id);
+                }
+                
+                alert(`Successfully deleted ${ids.length} competition(s)`);
+                loadCompetitions();
+            } catch (error) {
+                console.error('Error deleting competitions:', error);
+                alert('Error deleting competitions: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

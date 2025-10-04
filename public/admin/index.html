@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - BD Olympiad</title>
+    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-gray-800">BD Olympiad Admin</div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex space-x-6">
+                    <a href="/admin/" class="text-blue-500 font-bold hover:text-blue-700">Dashboard</a>
+                    <a href="/admin/competitions.html" class="text-gray-800 hover:text-blue-500">Competitions</a>
+                    <a href="/admin/users.html" class="text-gray-800 hover:text-blue-500">Users</a>
+                    <button id="logout-button" class="text-red-600 hover:text-red-800">Logout</button>
+                </div>
+            </div>
+
+            <!-- Mobile navigation -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="/admin/" class="text-blue-500 font-bold hover:text-blue-700">Dashboard</a>
+                    <a href="/admin/competitions.html" class="text-gray-800 hover:text-blue-500">Competitions</a>
+                    <a href="/admin/users.html" class="text-gray-800 hover:text-blue-500">Users</a>
+                    <button id="mobile-logout-button" class="text-red-600 hover:text-red-800 text-left">Logout</button>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Admin Dashboard</h1>
+        
+
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Statistics Card: Total Users -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Total Users</h2>
+                <p id="total-users" class="text-4xl font-bold text-blue-600">-</p>
+                <p id="new-users" class="text-gray-600 mt-2">Loading...</p>
+            </div>
+            
+            <!-- Statistics Card: Active Competitions -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Active Competitions</h2>
+                <p id="active-competitions" class="text-4xl font-bold text-green-600">-</p>
+                <p id="upcoming-competitions" class="text-gray-600 mt-2">Loading...</p>
+            </div>
+            
+            <!-- Statistics Card: Completed Exams -->
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-2">Completed Exams</h2>
+                <p id="completed-exams" class="text-4xl font-bold text-purple-600">-</p>
+                <p id="recent-exams" class="text-gray-600 mt-2">Loading...</p>
+            </div>
+        </div>
+        
+        <!-- Quick Actions -->
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Quick Actions</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <a href="/admin/competitions.html" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded text-center">
+                    Manage Competitions
+                </a>
+                <a href="/admin/users.html" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded text-center">
+                    Manage Users
+                </a>
+                <a href="/admin/competitions.html?action=new" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-4 rounded text-center">
+                    Create Competition
+                </a>
+                <a href="#" class="bg-gray-600 hover:bg-gray-700 text-white font-bold py-3 px-4 rounded text-center">
+                    View Reports
+                </a>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="mt-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Recent Activity</h2>
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+                <table class="min-w-full">
+                    <thead>
+                        <tr class="bg-gray-200 text-gray-700">
+                            <th class="py-3 px-4 text-left">User</th>
+                            <th class="py-3 px-4 text-left">Action</th>
+                            <th class="py-3 px-4 text-left">Competition</th>
+                            <th class="py-3 px-4 text-left">Time</th>
+                        </tr>
+                    </thead>
+                    <tbody id="activity-table-body">
+                        <tr>
+                            <td colspan="4" class="py-8 text-center">
+                                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+                                <p class="text-gray-600">Loading activity data...</p>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-6">
+        <div class="container mx-auto px-6">
+            <div class="flex flex-col md:flex-row justify-between items-center">
+                <div class="mb-4 md:mb-0">
+                    <p>&copy; 2024 BD Olympiad. All rights reserved.</p>
+                </div>
+                <div>
+                    <a href="/index.html" class="text-gray-300 hover:text-white mx-2">Main Site</a>
+                    <span class="text-gray-500">|</span>
+                    <a href="#" class="text-gray-300 hover:text-white mx-2">Help</a>
+                </div>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://your-supabase-url.supabase.co';
+        const supabaseKey = 'your-supabase-anon-key';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        // Mobile menu toggle
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+        });
+        
+        // Logout functionality
+        const logoutButton = document.getElementById('logout-button');
+        const mobileLogoutButton = document.getElementById('mobile-logout-button');
+        
+        async function handleLogout() {
+            try {
+                const { error } = await supabase.auth.signOut();
+                if (error) throw error;
+                
+                // Clear local storage
+                localStorage.removeItem('supabase.auth.token');
+                
+                // Redirect to login page
+                window.location.href = '/login.html';
+            } catch (error) {
+                console.error('Error signing out:', error);
+                alert('Failed to sign out. Please try again.');
+            }
+        }
+        
+        logoutButton.addEventListener('click', handleLogout);
+        mobileLogoutButton.addEventListener('click', handleLogout);
+        
+        // Check if user is admin, if not redirect
+        async function checkAdminStatus() {
+            try {
+                // Get session from localStorage
+                const session = JSON.parse(localStorage.getItem('supabase.auth.token'));
+                
+                if (!session) {
+                    window.location.href = '/login.html';
+                    return;
+                }
+                
+                // Check if user is admin
+                const { data: profile, error } = await supabase
+                    .from('profiles')
+                    .select('is_admin')
+                    .eq('user_id', session.user.id)
+                    .single();
+                
+                if (error) throw error;
+                
+                if (!profile || !profile.is_admin) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+                
+                // Load dashboard data
+                loadDashboardData();
+                
+            } catch (error) {
+                console.error('Error checking admin status:', error);
+                window.location.href = '/login.html';
+            }
+        }
+        
+        async function loadDashboardData() {
+            try {
+                // Load total users count
+                const { count: totalUsers, error: usersError } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true });
+                
+                if (usersError) throw usersError;
+                
+                document.getElementById('total-users').textContent = totalUsers;
+                
+                // Get new users in the last 30 days
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                
+                const { count: newUsers, error: newUsersError } = await supabase
+                    .from('profiles')
+                    .select('*', { count: 'exact', head: true })
+                    .gte('created_at', thirtyDaysAgo.toISOString());
+                
+                if (newUsersError) throw newUsersError;
+                
+                document.getElementById('new-users').textContent = `+${newUsers} this month`;
+                
+                // Load active competitions
+                const today = new Date().toISOString();
+                
+                const { count: activeCompetitions, error: activeCompError } = await supabase
+                    .from('competitions')
+                    .select('*', { count: 'exact', head: true })
+                    .lte('start_date', today)
+                    .gte('end_date', today);
+                
+                if (activeCompError) throw activeCompError;
+                
+                document.getElementById('active-competitions').textContent = activeCompetitions;
+                
+                // Load upcoming competitions
+                const { count: upcomingCompetitions, error: upcomingCompError } = await supabase
+                    .from('competitions')
+                    .select('*', { count: 'exact', head: true })
+                    .gt('start_date', today);
+                
+                if (upcomingCompError) throw upcomingCompError;
+                
+                document.getElementById('upcoming-competitions').textContent = `${upcomingCompetitions} upcoming`;
+                
+                // Load completed exams
+                const { count: completedExams, error: examsError } = await supabase
+                    .from('submissions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'completed');
+                
+                if (examsError) throw examsError;
+                
+                document.getElementById('completed-exams').textContent = completedExams;
+                
+                // Get recent exams in the last 7 days
+                const sevenDaysAgo = new Date();
+                sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+                
+                const { count: recentExams, error: recentExamsError } = await supabase
+                    .from('submissions')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('status', 'completed')
+                    .gte('updated_at', sevenDaysAgo.toISOString());
+                
+                if (recentExamsError) throw recentExamsError;
+                
+                document.getElementById('recent-exams').textContent = `+${recentExams} this week`;
+                
+                // Load recent activity
+                const { data: activities, error: activitiesError } = await supabase
+                    .from('submissions')
+                    .select(`
+                        id,
+                        status,
+                        updated_at,
+                        profiles(name),
+                        competitions(title)
+                    `)
+                    .order('updated_at', { ascending: false })
+                    .limit(10);
+                
+                if (activitiesError) throw activitiesError;
+                
+                const activityTableBody = document.getElementById('activity-table-body');
+                activityTableBody.innerHTML = '';
+                
+                if (activities.length === 0) {
+                    activityTableBody.innerHTML = `
+                        <tr>
+                            <td colspan="4" class="py-8 text-center">
+                                <p class="text-gray-600">No recent activity.</p>
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                activities.forEach((activity, index) => {
+                    const row = document.createElement('tr');
+                    row.className = index < activities.length - 1 ? 'border-b border-gray-200 hover:bg-gray-100' : 'hover:bg-gray-100';
+                    
+                    // Format the time
+                    const activityTime = new Date(activity.updated_at);
+                    const now = new Date();
+                    const diffMs = now - activityTime;
+                    const diffMins = Math.floor(diffMs / 60000);
+                    const diffHours = Math.floor(diffMins / 60);
+                    const diffDays = Math.floor(diffHours / 24);
+                    
+                    let timeAgo;
+                    if (diffDays > 0) {
+                        timeAgo = `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+                    } else if (diffHours > 0) {
+                        timeAgo = `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+                    } else if (diffMins > 0) {
+                        timeAgo = `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+                    } else {
+                        timeAgo = 'just now';
+                    }
+                    
+                    // Determine action based on status
+                    let action;
+                    switch (activity.status) {
+                        case 'registered':
+                            action = 'Registered';
+                            break;
+                        case 'started':
+                            action = 'Started Exam';
+                            break;
+                        case 'completed':
+                            action = 'Completed Exam';
+                            break;
+                        default:
+                            action = 'Updated';
+                    }
+                    
+                    row.innerHTML = `
+                        <td class="py-3 px-4">${activity.profiles.name}</td>
+                        <td class="py-3 px-4">${action}</td>
+                        <td class="py-3 px-4">${activity.competitions.title}</td>
+                        <td class="py-3 px-4">${timeAgo}</td>
+                    `;
+                    
+                    activityTableBody.appendChild(row);
+                });
+                
+            } catch (error) {
+                console.error('Error loading dashboard data:', error);
+            }
+        }
+        
+        // Run on page load
+        checkAdminStatus();
+    </script>
+</body>
+</html>

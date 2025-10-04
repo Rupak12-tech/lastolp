@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Olympiads - BD Olympiad</title>
+    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <img src="/logo.png" alt="BD Olympiad Logo" class="h-10 mr-2">
+                    <span class="text-2xl font-bold text-gray-800">BD Olympiad</span>
+                </div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex space-x-6" id="desktop-nav">
+                    <a href="/index.html" class="text-gray-800 hover:text-blue-500">Home</a>
+                    <a href="/olympiads.html" class="text-blue-500 font-bold hover:text-blue-700">Olympiads</a>
+                    <a href="/leaderboard.html" class="text-gray-800 hover:text-blue-500">Leaderboard</a>
+                    <a href="/profile.html" class="text-gray-800 hover:text-blue-500">Profile</a>
+                    <a href="/login.html" class="text-gray-800 hover:text-blue-500" id="login-link">Login</a>
+                    <a href="/register.html" class="text-gray-800 hover:text-blue-500" id="register-link">Register</a>
+                    <a href="/admin/" class="text-gray-800 hover:text-blue-500" id="admin-link" style="display: none;">Admin</a>
+                </div>
+            </div>
+
+            <!-- Mobile navigation -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="/index.html" class="text-gray-800 hover:text-blue-500">Home</a>
+                    <a href="/olympiads.html" class="text-blue-500 font-bold hover:text-blue-700">Olympiads</a>
+                    <a href="/leaderboard.html" class="text-gray-800 hover:text-blue-500">Leaderboard</a>
+                    <a href="/profile.html" class="text-gray-800 hover:text-blue-500">Profile</a>
+                    <a href="/login.html" class="text-gray-800 hover:text-blue-500" id="mobile-login-link">Login</a>
+                    <a href="/register.html" class="text-gray-800 hover:text-blue-500" id="mobile-register-link">Register</a>
+                    <a href="/admin/" class="text-gray-800 hover:text-blue-500" id="mobile-admin-link" style="display: none;">Admin</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <h1 class="text-3xl font-bold text-gray-800 mb-6">Available Olympiads</h1>
+        <div id="competitions-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center py-8">
+                <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+                <p class="text-gray-600">Loading competitions...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">BD Olympiad</h3>
+                    <p class="text-gray-300">The ultimate platform for Bangladeshi students to showcase their skills in academic competitions.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/index.html" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="/olympiads.html" class="text-gray-300 hover:text-white">Olympiads</a></li>
+                        <li><a href="/leaderboard.html" class="text-gray-300 hover:text-white">Leaderboard</a></li>
+                        <li><a href="/profile.html" class="text-gray-300 hover:text-white">Profile</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Admin Access</h3>
+                    <p class="text-gray-300 mb-4">Website administrators can access the control panel below:</p>
+                    <a href="/admin/" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block">
+                        Admin Login
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-300">
+                &copy; 2024 BD Olympiad. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script src="/js/supabase-config.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            mobileMenuButton.addEventListener('click', function() {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            // Variable to store session
+            let session = null;
+            
+            try {
+                // Check authentication status
+                const sessionResponse = await supabaseClient.auth.getSession();
+                session = sessionResponse.data.session;
+                
+                if (session) {
+                    // User is logged in
+                    document.getElementById('login-link').style.display = 'none';
+                    document.getElementById('register-link').style.display = 'none';
+                    document.getElementById('mobile-login-link').style.display = 'none';
+                    document.getElementById('mobile-register-link').style.display = 'none';
+                    
+                    // Check if user is admin
+                    const { data: profile } = await supabaseClient
+                        .from('profiles')
+                        .select('is_admin')
+                        .eq('id', session.user.id)
+                        .single();
+                    
+                    if (profile && profile.is_admin) {
+                        document.getElementById('admin-link').style.display = 'block';
+                        document.getElementById('mobile-admin-link').style.display = 'block';
+                    }
+                } else {
+                    // User is not logged in
+                    const profileLink = document.getElementById('profile-link');
+                    const mobileProfileLink = document.getElementById('mobile-profile-link');
+                    
+                    if (profileLink) profileLink.style.display = 'none';
+                    if (mobileProfileLink) mobileProfileLink.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking authentication:', error);
+            }
+            
+            try {
+                // Sample competitions data (hardcoded for now)
+                const competitions = [
+                    {
+                        id: '1',
+                        title: 'National Math Olympiad 2024',
+                        description: 'Annual mathematics competition for high school students across Bangladesh. Test your problem-solving skills and compete with the best minds in the country.',
+                        start_date: '2024-07-15T09:00:00',
+                        end_date: '2024-07-15T12:00:00',
+                        category: 'Mathematics',
+                        duration: 180,
+                        status: 'upcoming'
+                    },
+                    {
+                        id: '2',
+                        title: 'Physics Challenge 2024',
+                        description: 'Explore the fundamental laws of physics through challenging problems and experiments. Open to all high school students with a passion for physics.',
+                        start_date: '2024-07-25T10:00:00',
+                        end_date: '2024-07-25T13:00:00',
+                        category: 'Physics',
+                        duration: 180,
+                        status: 'upcoming'
+                    },
+                    {
+                        id: '3',
+                        title: 'Programming Contest - Junior Division',
+                        description: 'Showcase your coding skills in this exciting programming contest. Solve algorithmic problems and compete for exciting prizes.',
+                        start_date: '2024-08-05T09:00:00',
+                        end_date: '2024-08-05T14:00:00',
+                        category: 'Computer Science',
+                        duration: 300,
+                        status: 'upcoming'
+                    },
+                    {
+                        id: '4',
+                        title: 'Chemistry Olympiad 2024',
+                        description: 'Test your knowledge of chemical principles and laboratory techniques in this national competition for future chemists.',
+                        start_date: '2024-08-12T10:00:00',
+                        end_date: '2024-08-12T13:00:00',
+                        category: 'Chemistry',
+                        duration: 180,
+                        status: 'upcoming'
+                    },
+                    {
+                        id: '5',
+                        title: 'Biology Challenge',
+                        description: 'Explore the fascinating world of biology through challenging problems and case studies. Open to all high school students.',
+                        start_date: '2024-08-20T09:00:00',
+                        end_date: '2024-08-20T12:00:00',
+                        category: 'Biology',
+                        duration: 180,
+                        status: 'upcoming'
+                    }
+                ];
+                    
+                const container = document.getElementById('competitions-container');
+                container.innerHTML = '';
+                    
+                competitions.forEach(competition => {
+                    const startDate = new Date(competition.start_date).toLocaleDateString();
+                    const endDate = new Date(competition.end_date).toLocaleDateString();
+                    
+                    const card = document.createElement('div');
+                    card.className = 'bg-white rounded-lg shadow-lg p-6';
+                    card.innerHTML = `
+                        <h2 class="text-2xl font-bold text-gray-800">${competition.title}</h2>
+                        <p class="text-gray-600 mt-2">Starts: ${startDate}</p>
+                        <p class="text-gray-600">Ends: ${endDate}</p>
+                        <p class="text-gray-700 mt-2">${competition.description}</p>
+                        <a href="${session ? `/competition-register.html?id=${competition.id}` : `/login.html?redirect=competition-register&id=${competition.id}`}" 
+                           class="mt-4 bg-blue-500 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 inline-block">
+                            Register Now
+                        </a>
+                    `;
+                    
+                    container.appendChild(card);
+                });
+                
+                // Registration is now handled directly through links
+            } catch (error) {
+                console.error('Error displaying competitions:', error);
+                const container = document.getElementById('competitions-container');
+                container.innerHTML = `
+                    <div class="col-span-full text-center py-8">
+                        <p class="text-red-600">Failed to load competitions. Please try again later.</p>
+                    </div>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Exam - BD Olympiad</title>
+    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <header class="bg-white shadow">
+        <div class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-gray-800">BD Olympiad</div>
+                <div class="flex items-center space-x-4">
+                    <div id="timer" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">
+                        Time Remaining: 60:00
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+                <div class="bg-blue-600 text-white p-6">
+                    <h1 id="exam-title" class="text-2xl font-bold">Mathematics Olympiad</h1>
+                    <p id="exam-description" class="text-blue-100 mt-2">Test your mathematical skills with challenging problems.</p>
+                </div>
+                
+                <div class="p-6">
+                    <div id="question-container" class="space-y-8">
+                        <!-- Question will be loaded here -->
+                        <div class="text-center py-12">
+                            <div class="inline-block animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600 mb-4"></div>
+                            <p class="text-gray-600">Loading exam questions...</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-between mt-8">
+                        <button id="prev-button" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                            Previous
+                        </button>
+                        
+                        <div class="flex space-x-2" id="question-nav">
+                            <!-- Question navigation buttons will be added here -->
+                        </div>
+                        
+                        <button id="next-button" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded disabled:opacity-50 disabled:cursor-not-allowed">
+                            Next
+                        </button>
+                    </div>
+                    
+                    <div class="mt-8 text-center">
+                        <button id="submit-button" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg">
+                            Submit Exam
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmation-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg p-8 max-w-md w-full">
+            <h2 class="text-2xl font-bold text-gray-800 mb-4">Confirm Submission</h2>
+            <p class="text-gray-600 mb-6">Are you sure you want to submit your exam? You cannot change your answers after submission.</p>
+            
+            <div class="flex justify-end space-x-4">
+                <button id="cancel-submit" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded">
+                    Cancel
+                </button>
+                <button id="confirm-submit" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Supabase client
+        const supabaseUrl = 'https://your-supabase-url.supabase.co';
+        const supabaseKey = 'your-supabase-anon-key';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Check if user is logged in
+            const session = JSON.parse(localStorage.getItem('supabase.auth.token'));
+            if (!session) {
+                window.location.href = '/login.html?redirect=exam';
+                return;
+            }
+            
+            // Get competition ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const competitionId = urlParams.get('id');
+            
+            if (!competitionId) {
+                window.location.href = '/olympiads.html';
+                return;
+            }
+            
+            let examData = null;
+            let currentQuestionIndex = 0;
+            let userAnswers = {};
+            let timerInterval = null;
+            let timeRemaining = 0; // in seconds
+            let submissionId = null;
+            
+            try {
+                // Check if user is registered for this competition
+                const { data: registration, error: regError } = await supabase
+                    .from('registrations')
+                    .select('id, status')
+                    .eq('user_id', session.user.id)
+                    .eq('competition_id', competitionId)
+                    .single();
+                
+                if (regError || !registration) {
+                    alert('You are not registered for this competition.');
+                    window.location.href = '/olympiads.html';
+                    return;
+                }
+                
+                // Check if user already has a submission
+                const { data: existingSubmission, error: subError } = await supabase
+                    .from('submissions')
+                    .select('id, start_time, end_time, score')
+                    .eq('user_id', session.user.id)
+                    .eq('competition_id', competitionId)
+                    .maybeSingle();
+                
+                if (subError) throw subError;
+                
+                if (existingSubmission && existingSubmission.end_time) {
+                    // Exam already completed
+                    alert('You have already completed this exam.');
+                    window.location.href = '/profile.html';
+                    return;
+                }
+                
+                // Get competition details
+                const { data: competition, error: compError } = await supabase
+                    .from('competitions')
+                    .select(`
+                        id, 
+                        title, 
+                        description, 
+                        duration,
+                        questions (
+                            id,
+                            text,
+                            options (
+                                id,
+                                text
+                            )
+                        )
+                    `)
+                    .eq('id', competitionId)
+                    .single();
+                
+                if (compError) throw compError;
+                
+                // Create or get existing submission
+                if (existingSubmission) {
+                    submissionId = existingSubmission.id;
+                    
+                    // Calculate remaining time
+                    const startTime = new Date(existingSubmission.start_time);
+                    const durationMs = competition.duration * 60 * 1000; // convert minutes to ms
+                    const endTime = new Date(startTime.getTime() + durationMs);
+                    const now = new Date();
+                    
+                    if (now > endTime) {
+                        // Time already expired
+                        timeRemaining = 0;
+                    } else {
+                        timeRemaining = Math.floor((endTime - now) / 1000);
+                    }
+                    
+                    // Get saved answers
+                    const { data: answers, error: ansError } = await supabase
+                        .from('answers')
+                        .select('question_id, option_id')
+                        .eq('submission_id', submissionId);
+                    
+                    if (!ansError && answers) {
+                        answers.forEach(answer => {
+                            userAnswers[answer.question_id] = answer.option_id;
+                        });
+                    }
+                } else {
+                    // Create new submission
+                    const { data: newSubmission, error: createError } = await supabase
+                        .from('submissions')
+                        .insert({
+                            user_id: session.user.id,
+                            competition_id: competitionId,
+                            start_time: new Date().toISOString(),
+                            score: 0
+                        })
+                        .select()
+                        .single();
+                    
+                    if (createError) throw createError;
+                    
+                    submissionId = newSubmission.id;
+                    timeRemaining = competition.duration * 60; // convert minutes to seconds
+                }
+                
+                // Prepare exam data
+                examData = {
+                    id: competition.id,
+                    title: competition.title,
+                    description: competition.description,
+                    timeRemaining: timeRemaining,
+                    questions: competition.questions.map(q => ({
+                        id: q.id,
+                        text: q.text,
+                        options: q.options
+                    })),
+                    userAnswers: userAnswers
+                };
+                
+                // Set exam title and description
+                document.getElementById('exam-title').textContent = examData.title;
+                document.getElementById('exam-description').textContent = examData.description;
+                
+                // Initialize timer
+                updateTimerDisplay();
+                startTimer();
+                
+                // Create question navigation
+                createQuestionNav();
+                
+                // Load first question
+                loadQuestion(currentQuestionIndex);
+                
+                // Set up navigation buttons
+                document.getElementById('prev-button').addEventListener('click', goToPreviousQuestion);
+                document.getElementById('next-button').addEventListener('click', goToNextQuestion);
+                
+                // Set up submission buttons
+                document.getElementById('submit-button').addEventListener('click', showConfirmationModal);
+                document.getElementById('cancel-submit').addEventListener('click', hideConfirmationModal);
+                document.getElementById('confirm-submit').addEventListener('click', submitExam);
+                
+                // Save progress periodically
+                setInterval(saveProgress, 30000); // every 30 seconds
+            } catch (error) {
+                console.error('Error loading exam:', error);
+                alert('Failed to load exam. Please try again later.');
+                window.location.href = '/olympiads.html';
+            }
+            
+            function updateTimerDisplay() {
+                const minutes = Math.floor(timeRemaining / 60);
+                const seconds = timeRemaining % 60;
+                document.getElementById('timer').textContent = `Time Remaining: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                
+                // Change color when less than 5 minutes remaining
+                if (timeRemaining < 300) {
+                    document.getElementById('timer').classList.remove('bg-blue-600');
+                    document.getElementById('timer').classList.add('bg-red-600');
+                }
+            }
+            
+            function startTimer() {
+                timerInterval = setInterval(() => {
+                    timeRemaining--;
+                    updateTimerDisplay();
+                    
+                    if (timeRemaining <= 0) {
+                        clearInterval(timerInterval);
+                        submitExam(true); // Auto-submit when time is up
+                    }
+                }, 1000);
+            }
+            
+            function createQuestionNav() {
+                const navContainer = document.getElementById('question-nav');
+                navContainer.innerHTML = '';
+                
+                examData.questions.forEach((question, index) => {
+                    const button = document.createElement('button');
+                    button.textContent = index + 1;
+                    button.className = 'w-8 h-8 rounded-full font-medium';
+                    updateQuestionNavButton(button, index);
+                    
+                    button.addEventListener('click', () => {
+                        loadQuestion(index);
+                    });
+                    
+                    navContainer.appendChild(button);
+                });
+            }
+            
+            function updateQuestionNavButton(button, index) {
+                // Remove all state classes
+                button.classList.remove('bg-blue-600', 'text-white', 'bg-green-600', 'bg-gray-200', 'text-gray-800');
+                
+                if (index === currentQuestionIndex) {
+                    // Current question
+                    button.classList.add('bg-blue-600', 'text-white');
+                } else if (userAnswers[examData.questions[index].id]) {
+                    // Answered question
+                    button.classList.add('bg-green-600', 'text-white');
+                } else {
+                    // Unanswered question
+                    button.classList.add('bg-gray-200', 'text-gray-800');
+                }
+            }
+            
+            function updateAllQuestionNavButtons() {
+                const buttons = document.getElementById('question-nav').children;
+                for (let i = 0; i < buttons.length; i++) {
+                    updateQuestionNavButton(buttons[i], i);
+                }
+            }
+            
+            function loadQuestion(index) {
+                currentQuestionIndex = index;
+                const question = examData.questions[index];
+                
+                const container = document.getElementById('question-container');
+                container.innerHTML = `
+                    <div class="mb-4">
+                        <span class="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">Question ${index + 1} of ${examData.questions.length}</span>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-4">${question.text}</h2>
+                `;
+                
+                // Add options
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = 'space-y-3 mt-6';
+                
+                question.options.forEach(option => {
+                    const isSelected = userAnswers[question.id] === option.id;
+                    
+                    const optionElement = document.createElement('div');
+                    optionElement.className = `p-4 border rounded-lg cursor-pointer ${isSelected ? 'border-blue-600 bg-blue-50' : 'border-gray-300 hover:border-blue-300'}`;
+                    optionElement.innerHTML = `
+                        <div class="flex items-start">
+                            <div class="flex items-center h-5">
+                                <input type="radio" name="question-option" id="option-${option.id}" 
+                                    class="h-4 w-4 text-blue-600 border-gray-300 focus:ring-blue-500"
+                                    ${isSelected ? 'checked' : ''}>
+                            </div>
+                            <div class="ml-3 text-sm">
+                                <label for="option-${option.id}" class="font-medium text-gray-700 cursor-pointer">
+                                    ${option.text}
+                                </label>
+                            </div>
+                        </div>
+                    `;
+                    
+                    optionElement.addEventListener('click', () => {
+                        // Select this option
+                        userAnswers[question.id] = option.id;
+                        
+                        // Update UI
+                        const allOptions = optionsContainer.children;
+                        for (let i = 0; i < allOptions.length; i++) {
+                            allOptions[i].classList.remove('border-blue-600', 'bg-blue-50');
+                            allOptions[i].classList.add('border-gray-300');
+                            allOptions[i].querySelector('input').checked = false;
+                        }
+                        
+                        optionElement.classList.remove('border-gray-300');
+                        optionElement.classList.add('border-blue-600', 'bg-blue-50');
+                        optionElement.querySelector('input').checked = true;
+                        
+                        // Update navigation buttons
+                        updateAllQuestionNavButtons();
+                        
+                        // Save progress
+                        saveProgress();
+                    });
+                    
+                    optionsContainer.appendChild(optionElement);
+                });
+                
+                container.appendChild(optionsContainer);
+                
+                // Update navigation buttons
+                document.getElementById('prev-button').disabled = index === 0;
+                document.getElementById('next-button').disabled = index === examData.questions.length - 1;
+                
+                updateAllQuestionNavButtons();
+            }
+            
+            function goToPreviousQuestion() {
+                if (currentQuestionIndex > 0) {
+                    loadQuestion(currentQuestionIndex - 1);
+                }
+            }
+            
+            function goToNextQuestion() {
+                if (currentQuestionIndex < examData.questions.length - 1) {
+                    loadQuestion(currentQuestionIndex + 1);
+                }
+            }
+            
+            async function saveProgress() {
+                try {
+                    // First, delete any existing answers
+                    await supabase
+                        .from('answers')
+                        .delete()
+                        .eq('submission_id', submissionId);
+                    
+                    // Then insert new answers
+                    const answersToInsert = Object.entries(userAnswers).map(([questionId, optionId]) => ({
+                        submission_id: submissionId,
+                        question_id: questionId,
+                        option_id: optionId
+                    }));
+                    
+                    if (answersToInsert.length > 0) {
+                        const { error } = await supabase
+                            .from('answers')
+                            .insert(answersToInsert);
+                        
+                        if (error) throw error;
+                    }
+                } catch (error) {
+                    console.error('Error saving progress:', error);
+                }
+            }
+            
+            function showConfirmationModal() {
+                document.getElementById('confirmation-modal').classList.remove('hidden');
+            }
+            
+            function hideConfirmationModal() {
+                document.getElementById('confirmation-modal').classList.add('hidden');
+            }
+            
+            async function submitExam(isAutoSubmit = false) {
+                // Stop the timer
+                clearInterval(timerInterval);
+                
+                // Hide modal if shown
+                hideConfirmationModal();
+                
+                // Show loading state
+                document.getElementById('submit-button').disabled = true;
+                document.getElementById('submit-button').innerHTML = `
+                    <span class="inline-block animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></span>
+                    Submitting...
+                `;
+                
+                try {
+                    // Save final answers
+                    await saveProgress();
+                    
+                    // Calculate score
+                    let score = 0;
+                    
+                    // Get correct answers
+                    const { data: correctAnswers, error: ansError } = await supabase
+                        .from('questions')
+                        .select('id, correct_option_id')
+                        .in('id', Object.keys(userAnswers));
+                    
+                    if (ansError) throw ansError;
+                    
+                    // Calculate score
+                    correctAnswers.forEach(q => {
+                        if (userAnswers[q.id] === q.correct_option_id) {
+                            score++;
+                        }
+                    });
+                    
+                    // Update submission with end time and score
+                    const { error: updateError } = await supabase
+                        .from('submissions')
+                        .update({
+                            end_time: new Date().toISOString(),
+                            score: score
+                        })
+                        .eq('id', submissionId);
+                    
+                    if (updateError) throw updateError;
+                    
+                    // Update registration status
+                    const { error: regError } = await supabase
+                        .from('registrations')
+                        .update({
+                            status: 'completed'
+                        })
+                        .eq('user_id', session.user.id)
+                        .eq('competition_id', competitionId);
+                    
+                    if (regError) throw regError;
+                    
+                    // Redirect to profile page
+                    window.location.href = `/profile.html`;
+                } catch (error) {
+                    console.error('Error submitting exam:', error);
+                    alert('Failed to submit exam: ' + error.message);
+                    document.getElementById('submit-button').disabled = false;
+                    document.getElementById('submit-button').textContent = 'Submit Exam';
+                    startTimer(); // Restart timer
+                }
+            }
+        });
+    </script>
+</body>
+</html>

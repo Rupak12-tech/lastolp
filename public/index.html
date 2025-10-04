@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BD Olympiad</title>
+    <link href="/dist/output.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-gray-800">BD Olympiad</div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div id="desktop-nav" class="hidden md:flex space-x-6">
+                    <a href="/index.html" class="text-blue-500 font-bold hover:text-blue-700">Home</a>
+                    <a href="/olympiads.html" class="text-gray-800 hover:text-blue-500">Olympiads</a>
+                    <a href="/leaderboard.html" class="text-gray-800 hover:text-blue-500">Leaderboard</a>
+                    <!-- Dynamic links will be added here based on authentication status -->
+                </div>
+            </div>
+
+            <!-- Mobile navigation -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="/index.html" class="text-blue-500 font-bold hover:text-blue-700">Home</a>
+                    <a href="/olympiads.html" class="text-gray-800 hover:text-blue-500">Olympiads</a>
+                    <a href="/leaderboard.html" class="text-gray-800 hover:text-blue-500">Leaderboard</a>
+                    <!-- Dynamic links will be added here based on authentication status -->
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="text-center">
+            <h1 class="text-4xl font-bold text-gray-800">Welcome to the BD Olympiad</h1>
+            <p class="text-gray-600 mt-2">The ultimate platform for Bangladeshi students to showcase their skills.</p>
+        </div>
+
+        <!-- User welcome section - will be shown when logged in -->
+        <div id="user-welcome" class="mt-8 bg-white rounded-lg shadow-lg p-6 hidden">
+            <div class="flex items-center">
+                <div class="w-16 h-16 rounded-full bg-blue-500 flex items-center justify-center text-white text-2xl font-bold mr-4" id="user-initials">
+                    BD
+                </div>
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800">Welcome back, <span id="user-name">Student</span>!</h2>
+                    <p class="text-gray-600" id="user-school-grade">School and Grade</p>
+                    <a href="/profile.html" class="text-blue-500 hover:underline">View your dashboard</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="upcoming-olympiads" class="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Upcoming olympiads will be loaded here dynamically -->
+            <div class="bg-white rounded-lg shadow-lg p-6 skeleton-loader">
+                <div class="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 skeleton-loader">
+                <div class="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-lg p-6 skeleton-loader">
+                <div class="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div class="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">BD Olympiad</h3>
+                    <p class="text-gray-300">The ultimate platform for Bangladeshi students to showcase their skills in academic competitions.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/index.html" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="/olympiads.html" class="text-gray-300 hover:text-white">Olympiads</a></li>
+                        <li><a href="/leaderboard.html" class="text-gray-300 hover:text-white">Leaderboard</a></li>
+                        <li><a href="/profile.html" class="text-gray-300 hover:text-white">Dashboard</a></li>
+                    </ul>
+                </div>
+                <div id="admin-footer-section">
+                    <h3 class="text-xl font-bold mb-4">Admin Access</h3>
+                    <p class="text-gray-300 mb-4">Website administrators can access the control panel below:</p>
+                    <a href="/admin/" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block">
+                        Admin Login
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-300">
+                &copy; 2024 BD Olympiad. All rights reserved.
+            </div>
+        </div>
+    </footer>
+    
+    <script src="/js/supabase-config.js"></script>
+    <script>
+        // Use the supabaseClient from the config file
+
+        // Mobile menu toggle
+        document.getElementById('mobile-menu-button').addEventListener('click', function() {
+            document.getElementById('mobile-menu').classList.toggle('hidden');
+        });
+
+        // Check authentication status and update navigation
+         async function checkAuth() {
+             const { data: { session } } = await supabaseClient.auth.getSession();
+             const desktopNav = document.getElementById('desktop-nav');
+             const mobileNav = document.getElementById('mobile-menu');
+             const adminFooterSection = document.getElementById('admin-footer-section');
+            
+            // Clear existing dynamic links
+            const desktopLinks = Array.from(desktopNav.querySelectorAll('a')).slice(0, 3);
+            const mobileLinks = Array.from(mobileNav.querySelectorAll('a')).slice(0, 3);
+            
+            desktopNav.innerHTML = '';
+            mobileNav.innerHTML = '';
+            
+            // Re-add static links
+            desktopLinks.forEach(link => desktopNav.appendChild(link));
+            mobileLinks.forEach(link => mobileNav.appendChild(link));
+            
+            if (session) {
+                // User is logged in
+                 const { data: profile } = await supabaseClient
+                     .from('profiles')
+                     .select('*')
+                     .eq('id', session.user.id)
+                     .single();
+                
+                // Display user welcome section
+                const userWelcome = document.getElementById('user-welcome');
+                if (userWelcome && profile) {
+                    userWelcome.classList.remove('hidden');
+                    document.getElementById('user-name').textContent = profile.full_name || 'Student';
+                    document.getElementById('user-school-grade').textContent = 
+                        `${profile.school || 'School'} - Grade ${profile.grade || ''}`;
+                    
+                    // Set user initials
+                    const nameParts = (profile.full_name || '').split(' ');
+                    let initials = 'BD';
+                    if (nameParts.length >= 2) {
+                        initials = nameParts[0][0] + nameParts[1][0];
+                    } else if (nameParts.length === 1 && nameParts[0].length > 0) {
+                        initials = nameParts[0][0];
+                    }
+                    document.getElementById('user-initials').textContent = initials.toUpperCase();
+                }
+                
+                // Add dashboard link
+                const profileLink = document.createElement('a');
+                profileLink.href = '/profile.html';
+                profileLink.className = 'text-gray-800 hover:text-blue-500';
+                profileLink.textContent = 'Dashboard';
+                desktopNav.appendChild(profileLink);
+                
+                const mobileProfileLink = profileLink.cloneNode(true);
+                mobileNav.appendChild(mobileProfileLink);
+                
+                // Add logout link
+                const logoutLink = document.createElement('a');
+                logoutLink.href = '#';
+                logoutLink.className = 'text-gray-800 hover:text-blue-500';
+                logoutLink.textContent = 'Logout';
+                logoutLink.addEventListener('click', async (e) => {
+                     e.preventDefault();
+                     await supabaseClient.auth.signOut();
+                     window.location.reload();
+                 });
+                desktopNav.appendChild(logoutLink);
+                
+                const mobileLogoutLink = logoutLink.cloneNode(true);
+                mobileLogoutLink.addEventListener('click', async (e) => {
+                     e.preventDefault();
+                     await supabaseClient.auth.signOut();
+                     window.location.reload();
+                 });
+                mobileNav.appendChild(mobileLogoutLink);
+                
+                // Add admin link if user is admin
+                if (profile && profile.is_admin) {
+                    const adminLink = document.createElement('a');
+                    adminLink.href = '/admin/';
+                    adminLink.className = 'text-gray-800 hover:text-blue-500';
+                    adminLink.textContent = 'Admin';
+                    desktopNav.appendChild(adminLink);
+                    
+                    const mobileAdminLink = adminLink.cloneNode(true);
+                    mobileNav.appendChild(mobileAdminLink);
+                    
+                    // Show admin section in footer
+                    if (adminFooterSection) {
+                        adminFooterSection.style.display = 'block';
+                    }
+                } else {
+                    // Hide admin section in footer for non-admin users
+                    if (adminFooterSection) {
+                        adminFooterSection.style.display = 'none';
+                    }
+                }
+            } else {
+                // User is not logged in
+                const loginLink = document.createElement('a');
+                loginLink.href = '/login.html';
+                loginLink.className = 'text-gray-800 hover:text-blue-500';
+                loginLink.textContent = 'Login';
+                desktopNav.appendChild(loginLink);
+                
+                const mobileLoginLink = loginLink.cloneNode(true);
+                mobileNav.appendChild(mobileLoginLink);
+                
+                const registerLink = document.createElement('a');
+                registerLink.href = '/register.html';
+                registerLink.className = 'text-gray-800 hover:text-blue-500';
+                registerLink.textContent = 'Register';
+                desktopNav.appendChild(registerLink);
+                
+                const mobileRegisterLink = registerLink.cloneNode(true);
+                mobileNav.appendChild(mobileRegisterLink);
+                
+                // Show admin section in footer for all visitors
+                if (adminFooterSection) {
+                    adminFooterSection.style.display = 'block';
+                }
+            }
+        }
+
+        // Load upcoming olympiads
+        async function loadUpcomingOlympiads() {
+            const olympiadsContainer = document.getElementById('upcoming-olympiads');
+            
+            try {
+                // Get current date
+                const now = new Date();
+                
+                // Fetch upcoming competitions
+                 const { data: competitions, error } = await supabaseClient
+                     .from('competitions')
+                     .select('*')
+                     .gte('start_date', now.toISOString())
+                     .order('start_date', { ascending: true })
+                     .limit(3);
+                
+                if (error) throw error;
+                
+                // Remove skeleton loaders
+                const skeletons = olympiadsContainer.querySelectorAll('.skeleton-loader');
+                skeletons.forEach(skeleton => skeleton.remove());
+                
+                if (competitions && competitions.length > 0) {
+                    competitions.forEach(competition => {
+                        const startDate = new Date(competition.start_date);
+                        const formattedDate = startDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                        });
+                        
+                        const card = document.createElement('div');
+                        card.className = 'bg-white rounded-lg shadow-lg p-6';
+                        card.innerHTML = `
+                            <h2 class="text-2xl font-bold text-gray-800">${competition.title}</h2>
+                            <p class="text-gray-600 mt-2">${competition.description}</p>
+                            <p class="text-gray-600 mt-2">Date: ${formattedDate}</p>
+                            <a href="/olympiads.html" class="text-blue-500 hover:underline mt-4 inline-block">Learn More</a>
+                        `;
+                        olympiadsContainer.appendChild(card);
+                    });
+                } else {
+                    // No upcoming competitions
+                    const noCompetitions = document.createElement('div');
+                    noCompetitions.className = 'col-span-3 text-center py-8';
+                    noCompetitions.innerHTML = `
+                        <p class="text-gray-600">No upcoming olympiads at the moment. Check back later!</p>
+                    `;
+                    olympiadsContainer.appendChild(noCompetitions);
+                }
+            } catch (error) {
+                console.error('Error loading olympiads:', error);
+                olympiadsContainer.innerHTML = `
+                    <div class="col-span-3 text-center py-8">
+                        <p class="text-red-500">Failed to load upcoming olympiads. Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            loadUpcomingOlympiads();
+        });
+    </script>
+</body>
+</html>

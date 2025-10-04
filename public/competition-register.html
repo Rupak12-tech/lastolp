@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register for Competition - BD Olympiad</title>
+    <link href="/dist/output.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+    <header class="bg-white shadow">
+        <nav class="container mx-auto px-6 py-3">
+            <div class="flex justify-between items-center">
+                <div class="text-2xl font-bold text-gray-800">BD Olympiad</div>
+                
+                <!-- Mobile menu button -->
+                <div class="md:hidden">
+                    <button id="mobile-menu-button" class="text-gray-800 hover:text-blue-500">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Desktop navigation -->
+                <div class="hidden md:flex space-x-6">
+                    <a href="/index.html" class="text-gray-800 hover:text-blue-500">Home</a>
+                    <a href="/olympiads.html" class="text-gray-800 hover:text-blue-500">Olympiads</a>
+                    <a href="/leaderboard.html" class="text-gray-800 hover:text-blue-500">Leaderboard</a>
+                    <a href="/profile.html" class="text-gray-800 hover:text-blue-500">Profile</a>
+                    <a href="/login.html" class="text-gray-800 hover:text-blue-500">Login</a>
+                    <a href="/register.html" class="text-gray-800 hover:text-blue-500">Register</a>
+                </div>
+            </div>
+
+            <!-- Mobile navigation -->
+            <div id="mobile-menu" class="hidden md:hidden mt-4">
+                <div class="flex flex-col space-y-2">
+                    <a href="/index.html" class="text-gray-800 hover:text-blue-700">Home</a>
+                    <a href="/olympiads.html" class="text-gray-800 hover:text-blue-500">Olympiads</a>
+                    <a href="/leaderboard.html" class="text-gray-800 hover:text-blue-500">Leaderboard</a>
+                    <a href="/profile.html" class="text-gray-800 hover:text-blue-500">Profile</a>
+                    <a href="/login.html" class="text-gray-800 hover:text-blue-500">Login</a>
+                    <a href="/register.html" class="text-gray-800 hover:text-blue-500">Register</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container mx-auto px-6 py-8">
+        <div class="max-w-2xl mx-auto">
+            <h1 class="text-3xl font-bold text-center text-gray-800 mb-8">Register for Competition</h1>
+            
+            <div id="competition-details" class="bg-white rounded-lg shadow-lg p-6 mb-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-4" id="competition-title">Loading competition...</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <p class="text-gray-600"><span class="font-semibold">Subject:</span> <span id="competition-subject">-</span></p>
+                        <p class="text-gray-600"><span class="font-semibold">Date:</span> <span id="competition-date">-</span></p>
+                    </div>
+                    <div>
+                        <p class="text-gray-600"><span class="font-semibold">Duration:</span> <span id="competition-duration">-</span></p>
+                        <p class="text-gray-600"><span class="font-semibold">Eligibility:</span> <span id="competition-eligibility">-</span></p>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <p class="text-gray-600"><span class="font-semibold">Description:</span></p>
+                    <p id="competition-description" class="text-gray-600 mt-2">-</p>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-lg p-6">
+                <h2 class="text-xl font-bold text-gray-800 mb-4">Confirm Registration</h2>
+                
+                <form id="registration-form" class="space-y-4">
+                    <input type="hidden" id="competition-id" name="competitionId">
+                    
+                    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-4">
+                        <p class="text-blue-700">You are registering with your account information. Make sure your profile details are up to date.</p>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="terms" name="terms" class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
+                        <label for="terms" class="ml-2 block text-sm text-gray-700">
+                            I agree to the competition rules and terms
+                        </label>
+                    </div>
+                    
+                    <div class="pt-4">
+                        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+                            Confirm Registration
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-gray-800 text-white py-8 mt-12">
+        <div class="container mx-auto px-6">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div>
+                    <h3 class="text-xl font-bold mb-4">BD Olympiad</h3>
+                    <p class="text-gray-300">The ultimate platform for Bangladeshi students to showcase their skills in academic competitions.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="/index.html" class="text-gray-300 hover:text-white">Home</a></li>
+                        <li><a href="/olympiads.html" class="text-gray-300 hover:text-white">Olympiads</a></li>
+                        <li><a href="/leaderboard.html" class="text-gray-300 hover:text-white">Leaderboard</a></li>
+                        <li><a href="/profile.html" class="text-gray-300 hover:text-white">Profile</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-xl font-bold mb-4">Admin Access</h3>
+                    <p class="text-gray-300 mb-4">Website administrators can access the control panel below:</p>
+                    <a href="/admin/" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded inline-block">
+                        Admin Login
+                    </a>
+                </div>
+            </div>
+            <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-300">
+                &copy; 2024 BD Olympiad. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/script.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Get competition ID from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const competitionId = urlParams.get('id');
+            
+            if (!competitionId) {
+                window.location.href = '/olympiads.html';
+                return;
+            }
+            
+            document.getElementById('competition-id').value = competitionId;
+            
+            // Check if user is logged in
+            const userData = localStorage.getItem('user');
+            if (!userData) {
+                // Redirect to login with return URL
+                window.location.href = `/login.html?redirect=${encodeURIComponent(window.location.href)}`;
+                return;
+            }
+            
+            // Fetch competition details
+            fetch(`/api/competitions/${competitionId}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Competition not found');
+                    }
+                    return response.json();
+                })
+                .then(competition => {
+                    // Populate competition details
+                    document.getElementById('competition-title').textContent = competition.title;
+                    document.getElementById('competition-subject').textContent = competition.subject;
+                    document.getElementById('competition-date').textContent = new Date(competition.date).toLocaleDateString();
+                    document.getElementById('competition-duration').textContent = `${competition.duration} minutes`;
+                    document.getElementById('competition-eligibility').textContent = competition.eligibility || 'All students';
+                    document.getElementById('competition-description').textContent = competition.description;
+                })
+                .catch(error => {
+                    console.error('Error fetching competition:', error);
+                    alert('Could not load competition details. Please try again later.');
+                    window.location.href = '/olympiads.html';
+                });
+            
+            // Handle form submission
+            document.getElementById('registration-form').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const termsChecked = document.getElementById('terms').checked;
+                if (!termsChecked) {
+                    alert('You must agree to the competition rules and terms to register.');
+                    return;
+                }
+                
+                // Submit registration
+                fetch('/api/registrations', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        competitionId: competitionId
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 409) {
+                            throw new Error('You are already registered for this competition');
+                        }
+                        throw new Error('Registration failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    alert('Registration successful! You can view your registered competitions in your profile.');
+                    window.location.href = '/profile.html';
+                })
+                .catch(error => {
+                    console.error('Error registering:', error);
+                    alert(error.message || 'Registration failed. Please try again later.');
+                });
+            });
+        });
+    </script>
+</body>
+</html>
